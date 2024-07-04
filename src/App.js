@@ -1,4 +1,5 @@
-import { Children, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import StarRating from "./StarRating";
 
 const tempMovieData = [
   {
@@ -68,6 +69,10 @@ export default function App() {
     setSelectedId(null);
   }
 
+  function handleAddWatched(movie) {
+    setWatched((watched) => [...watched, movie]);
+  }
+
   useEffect(
     function () {
       async function fetchMovies() {
@@ -127,6 +132,8 @@ export default function App() {
               <MovieDetails
                 selectedId={selectedId}
                 onClose={handleCloseMovie}
+                onAddWatched={handleAddWatched}
+                watched={watched}
               />
             ) : (
               <>
@@ -235,7 +242,39 @@ function Movie({ movie, onSelectedMovie }) {
   );
 }
 
-function MovieDetails({ selectedId, onClose }) {
+function MovieDetails({ selectedId, onClose, onAddWatched, watched }) {
+  const [movie, setMovie] = useState({});
+  const [userRating, setUserRating] = useState("");
+
+  const isWatched = watched.map((movie) => movie.imdbID).includes(selectedId);
+
+  const {
+    Title: title,
+    Year: year,
+    Poster: poster,
+    Runtime: runtime,
+    Plot: plot,
+    Genre: genre,
+    Released: released,
+    Actors: actors,
+    Director: director,
+    imdbRating,
+  } = movie;
+
+  function handleAdd() {
+    const newWatched = {
+      imdbID: selectedId,
+      title,
+      year,
+      poster,
+      imdbRating: Number(imdbRating),
+      runtime: Number(runtime.split(" ").at(0)),
+      userRating,
+    };
+    onAddWatched(newWatched);
+    onClose();
+  }
+
   useEffect(
     function () {
       async function getMoviesDetails() {
@@ -243,6 +282,7 @@ function MovieDetails({ selectedId, onClose }) {
           `http://www.omdbapi.com/?apikey=${KEY}&i=${selectedId}`
         );
         const data = await res.json();
+        setMovie(data);
         console.log(data);
       }
       getMoviesDetails();
@@ -256,8 +296,42 @@ function MovieDetails({ selectedId, onClose }) {
         <button className="btn-back" onClick={() => onClose()}>
           &larr;
         </button>
+        <img src={poster} alt={`poster of ${movie} movies`} />
+        <div className="details-overview">
+          <h2>{title}</h2>
+          <p>
+            {released} &bull; {runtime}
+          </p>
+          <p>{genre}</p>
+          <p>
+            <span>⭐️</span>
+            {imdbRating} IMDb imdbRating
+          </p>
+        </div>
       </header>
-      {selectedId}
+      <section>
+        <div className="rating">
+          {!isWatched ? (
+            <>
+              <StarRating
+                size={22}
+                maxRating={10}
+                onSetRating={setUserRating}
+              />
+              <button className="btn-add" onClick={handleAdd}>
+                + add to list
+              </button>
+            </>
+          ) : (
+            <p>You rated with movie</p>
+          )}
+        </div>
+        <p>
+          <em>{plot}</em>
+        </p>
+        <p>Starring {actors}</p>
+        <p>Directed by {director}</p>
+      </section>
     </div>
   );
 }
@@ -287,15 +361,15 @@ function WatchedSummary({ watched }) {
         </p>
         <p>
           <span>⭐️</span>
-          <span>{avgImdbRating}</span>
+          <span>{avgImdbRating.toFixed(2)}</span>
         </p>
         <p>
           <span>⭐️</span>
-          <span>{avgUserRating}</span>
+          <span>{avgUserRating.toFixed(2)}</span>
         </p>
         <p>
           <span>⏳</span>
-          <span>{avgRunTime} min</span>
+          <span>{avgRunTime.toFixed(2)} min</span>
         </p>
       </div>
     </div>
@@ -305,20 +379,20 @@ function WatchedSummary({ watched }) {
 function WatchedMovie({ movie }) {
   return (
     <li>
-      <img src={movie.Poster} alt={`${movie.Title} poster`} />
-      <h3>{movie.Title}</h3>
+      <img src={movie.poster} alt={`${movie.title} poster`} />
+      <h3>{movie.title}</h3>
       <div>
         <p>
           <span>⭐️</span>
-          <span>4.4</span>
+          <span>{movie.imdbRating}</span>
         </p>
         <p>
           <span>⭐️</span>
-          <span>8</span>
+          <span>{movie.userRating}</span>
         </p>
         <p>
           <span>⏳</span>
-          <span>124 min</span>
+          <span>{movie.runtime} min</span>
         </p>
       </div>
     </li>
