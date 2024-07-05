@@ -48,11 +48,13 @@ const tempWatchedData = [
   },
 ];
 
+// Calculate the average
 const average = (arr) =>
   arr.reduce((acc, curr, i, arr) => acc + curr / arr.length, 0);
 
 const KEY = "20f4eb3d";
 
+// App Component
 export default function App() {
   const [qeury, setQeury] = useState("");
   const [movies, setMovie] = useState([]);
@@ -61,22 +63,27 @@ export default function App() {
   const [error, setError] = useState("");
   const [selectedId, setSelectedId] = useState(null);
 
+  // Select movies by ID
   function handleSelectedMovie(id) {
     setSelectedId((selectedId) => (id === selectedId ? null : id));
   }
 
+  // OnClick movie to close
   function handleCloseMovie() {
     setSelectedId(null);
   }
 
+  // Add movies to wached list
   function handleAddWatched(movie) {
     setWatched((watched) => [...watched, movie]);
   }
 
+  // Delete movie by ID from the wached list
   function handleDeleteWatched(id) {
     setWatched((watched) => watched.filter((movie) => movie.imdbID !== id));
   }
 
+  // Fetch movies data from API
   useEffect(
     function () {
       async function fetchMovies() {
@@ -157,10 +164,12 @@ export default function App() {
   );
 }
 
+// Loader component
 function Loader() {
   return <p className="loader">Loadin...</p>;
 }
 
+// Error component
 function ErrorMessage({ message }) {
   return (
     <p className="error">
@@ -169,6 +178,7 @@ function ErrorMessage({ message }) {
   );
 }
 
+// NavBar Component
 function NavBar({ children }) {
   return (
     <nav className="nav-bar">
@@ -207,10 +217,12 @@ function MoviesResult({ movies }) {
   );
 }
 
+// Main component
 function Main({ children }) {
   return <div className="main">{children}</div>;
 }
 
+// Box component
 function Box({ children }) {
   const [isopen, setIsOpen] = useState(true);
   return (
@@ -224,6 +236,7 @@ function Box({ children }) {
   );
 }
 
+// Movie list component
 function MoviesList({ movies, onSelectedMovie }) {
   return (
     <ul className="list list-movies">
@@ -238,6 +251,7 @@ function MoviesList({ movies, onSelectedMovie }) {
   );
 }
 
+// List component
 function Movie({ movie, onSelectedMovie }) {
   return (
     <li onClick={() => onSelectedMovie(movie.imdbID)}>
@@ -251,6 +265,7 @@ function Movie({ movie, onSelectedMovie }) {
   );
 }
 
+// Movie details componenet
 function MovieDetails({ selectedId, onClose, onAddWatched, watched }) {
   const [movie, setMovie] = useState({});
   const [userRating, setUserRating] = useState("");
@@ -274,6 +289,7 @@ function MovieDetails({ selectedId, onClose, onAddWatched, watched }) {
     imdbRating,
   } = movie;
 
+  // Create new object for wached movie data
   function handleAdd() {
     const newWatched = {
       imdbID: selectedId,
@@ -288,6 +304,7 @@ function MovieDetails({ selectedId, onClose, onAddWatched, watched }) {
     onClose();
   }
 
+  // Fetch movie data from API by ID
   useEffect(
     function () {
       async function getMoviesDetails() {
@@ -304,6 +321,7 @@ function MovieDetails({ selectedId, onClose, onAddWatched, watched }) {
     [selectedId]
   );
 
+  // Key Event
   useEffect(
     function () {
       function callback(e) {
@@ -321,6 +339,7 @@ function MovieDetails({ selectedId, onClose, onAddWatched, watched }) {
     [onClose]
   );
 
+  // Change app title when on of movie selected
   useEffect(
     function () {
       document.title = `movie | ${title}`;
@@ -387,6 +406,7 @@ function MovieDetails({ selectedId, onClose, onAddWatched, watched }) {
   );
 }
 
+// Watche movie summary component
 function WatchedSummary({ watched }) {
   const avgImdbRating = average(watched.map((movie) => movie.imdbRating));
   const avgUserRating = average(watched.map((movie) => movie.userRating));
@@ -416,6 +436,8 @@ function WatchedSummary({ watched }) {
     </div>
   );
 }
+
+// Watched movie list component
 function WatchedList({ watched, onDeleteWatched }) {
   return (
     <ul className="list">
@@ -430,6 +452,7 @@ function WatchedList({ watched, onDeleteWatched }) {
   );
 }
 
+// watched list componenet
 function WatchedMovie({ movie, onDeleteWatched }) {
   return (
     <li>
