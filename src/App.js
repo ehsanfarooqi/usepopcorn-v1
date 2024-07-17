@@ -58,11 +58,17 @@ const KEY = "20f4eb3d";
 export default function App() {
   const [qeury, setQeury] = useState("");
   const [movies, setMovie] = useState([]);
-  const [watched, setWatched] = useState([]);
   const [isLoading, setIsloading] = useState(false);
   const [error, setError] = useState("");
   const [selectedId, setSelectedId] = useState(null);
 
+  // const [watched, setWatched] = useState([]);
+
+  // Get Item form localstorage
+  const [watched, setWatched] = useState(function () {
+    const storedValue = localStorage.getItem("watched");
+    return JSON.parse(storedValue);
+  });
   // Select movies by ID
   function handleSelectedMovie(id) {
     setSelectedId((selectedId) => (id === selectedId ? null : id));
@@ -76,12 +82,22 @@ export default function App() {
   // Add movies to wached list
   function handleAddWatched(movie) {
     setWatched((watched) => [...watched, movie]);
+
+    // localStorage.setItem("watched", JSON.stringify([...watched, movie]));
   }
 
   // Delete movie by ID from the wached list
   function handleDeleteWatched(id) {
     setWatched((watched) => watched.filter((movie) => movie.imdbID !== id));
   }
+
+  // LocalStrorage
+  useEffect(
+    function () {
+      localStorage.setItem("watched", JSON.stringify(watched));
+    },
+    [watched]
+  );
 
   // Fetch movies data from API
   useEffect(
@@ -198,6 +214,12 @@ function Logo() {
 }
 
 function Search({ qeury, setQeury }) {
+  // Focus on input element
+  useEffect(function () {
+    const el = document.querySelector(".search");
+    console.log(el);
+    el.focus();
+  }, []);
   return (
     <input
       className="search"
@@ -290,6 +312,18 @@ function MovieDetails({ selectedId, onClose, onAddWatched, watched }) {
   } = movie;
 
   // if (imdbRating > 8) [isTop, setIsTop] = useState(true);
+
+  // const [isTop, setIsTop] = useState(imdbRating > 8);
+  // console.log(isTop);
+  // useEffect(
+  //   function () {
+  //     setIsTop(imdbRating > 8);
+  //   },
+  //   [imdbRating]
+  // );
+
+  const isTop = imdbRating > 8;
+  console.log(isTop);
 
   // Create new object for wached movie data
   function handleAdd() {
