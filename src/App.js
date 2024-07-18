@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import StarRating from "./StarRating";
 
 const tempMovieData = [
@@ -214,12 +214,34 @@ function Logo() {
 }
 
 function Search({ qeury, setQeury }) {
-  // Focus on input element
-  useEffect(function () {
-    const el = document.querySelector(".search");
-    console.log(el);
-    el.focus();
-  }, []);
+  const inputEL = useRef(null);
+
+  useEffect(
+    function () {
+      function callback(e) {
+        if (document.activeElement === inputEL.current) return;
+
+        if (e.code === "Enter") {
+          inputEL.current.focus();
+          setQeury("");
+        }
+      }
+
+      document.addEventListener("keydown", callback);
+
+      // Clean Up
+      return () => document.addEventListener("keydown", callback);
+    },
+    [setQeury]
+  );
+
+  // // Focus on input element
+  // useEffect(function () {
+  //   const el = document.querySelector(".search");
+  //   console.log(el);
+  //   el.focus();
+  // }, []);
+
   return (
     <input
       className="search"
@@ -227,6 +249,7 @@ function Search({ qeury, setQeury }) {
       placeholder="Search movies..."
       value={qeury}
       onChange={(e) => setQeury(e.target.value)}
+      ref={inputEL}
     />
   );
 }
