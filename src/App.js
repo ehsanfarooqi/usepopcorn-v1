@@ -1,52 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import StarRating from "./StarRating";
-
-const tempMovieData = [
-  {
-    imdbID: "tt1375666",
-    Title: "Inception",
-    Year: "2010",
-    Poster:
-      "https://m.media-amazon.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1_SX300.jpg",
-  },
-  {
-    imdbID: "tt0133093",
-    Title: "The Matrix",
-    Year: "1999",
-    Poster:
-      "https://m.media-amazon.com/images/M/MV5BNzQzOTk3OTAtNDQ0Zi00ZTVkLWI0MTEtMDllZjNkYzNjNTc4L2ltYWdlXkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_SX300.jpg",
-  },
-  {
-    imdbID: "tt6751668",
-    Title: "Parasite",
-    Year: "2019",
-    Poster:
-      "https://m.media-amazon.com/images/M/MV5BYWZjMjk3ZTItODQ2ZC00NTY5LWE0ZDYtZTI3MjcwN2Q5NTVkXkEyXkFqcGdeQXVyODk4OTc3MTY@._V1_SX300.jpg",
-  },
-];
-
-const tempWatchedData = [
-  {
-    imdbID: "tt1375666",
-    Title: "Inception",
-    Year: "2010",
-    Poster:
-      "https://m.media-amazon.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1_SX300.jpg",
-    runtime: 148,
-    imdbRating: 8.8,
-    userRating: 10,
-  },
-  {
-    imdbID: "tt0088763",
-    Title: "Back to the Future",
-    Year: "1985",
-    Poster:
-      "https://m.media-amazon.com/images/M/MV5BZmU0M2Y1OGUtZjIxNi00ZjBkLTg1MjgtOWIyNThiZWIwYjRiXkEyXkFqcGdeQXVyMTQxNzMzNDI@._V1_SX300.jpg",
-    runtime: 116,
-    imdbRating: 8.5,
-    userRating: 9,
-  },
-];
+import { useMovies } from "./useMovies";
+import { useLocalStorageState } from "./useLocalStorageState";
+import { useKey } from "./useKey";
 
 // Calculate the average
 const average = (arr) =>
@@ -57,18 +13,11 @@ const KEY = "20f4eb3d";
 // App Component
 export default function App() {
   const [qeury, setQeury] = useState("");
-  const [movies, setMovie] = useState([]);
-  const [isLoading, setIsloading] = useState(false);
-  const [error, setError] = useState("");
   const [selectedId, setSelectedId] = useState(null);
+  const { movies, isLoading, error } = useMovies(qeury);
 
-  // const [watched, setWatched] = useState([]);
+  const [watched, setWatched] = useLocalStorageState([], "watched");
 
-  // Get Item form localstorage
-  const [watched, setWatched] = useState(function () {
-    const storedValue = localStorage.getItem("watched");
-    return JSON.parse(storedValue);
-  });
   // Select movies by ID
   function handleSelectedMovie(id) {
     setSelectedId((selectedId) => (id === selectedId ? null : id));
@@ -90,50 +39,6 @@ export default function App() {
   function handleDeleteWatched(id) {
     setWatched((watched) => watched.filter((movie) => movie.imdbID !== id));
   }
-
-  // LocalStrorage
-  useEffect(
-    function () {
-      localStorage.setItem("watched", JSON.stringify(watched));
-    },
-    [watched]
-  );
-
-  // Fetch movies data from API
-  useEffect(
-    function () {
-      async function fetchMovies() {
-        setIsloading(true);
-        setError("");
-        try {
-          const res = await fetch(
-            `http://www.omdbapi.com/?apikey=${KEY}&s=${qeury}`
-          );
-          if (!res.ok)
-            throw new Error("Somthing wnr wrong with fetching movies!");
-
-          const data = await res.json();
-          if (data.Response === "False") throw new Error("Movie not found");
-
-          setMovie(data.Search);
-          setError("");
-        } catch (err) {
-          setError(err.message);
-        } finally {
-          setIsloading(false);
-        }
-      }
-      if (qeury.length < 3) {
-        setMovie([]);
-        setError("");
-
-        return;
-      }
-      handleCloseMovie();
-      fetchMovies();
-    },
-    [qeury]
-  );
 
   return (
     <div>
@@ -216,31 +121,30 @@ function Logo() {
 function Search({ qeury, setQeury }) {
   const inputEL = useRef(null);
 
-  useEffect(
-    function () {
-      function callback(e) {
-        if (document.activeElement === inputEL.current) return;
+  useKey("Enter", function () {
+    if (document.activeElement === inputEL.current) return;
+    inputEL.current.focus();
+    setQeury("");
+  });
 
-        if (e.code === "Enter") {
-          inputEL.current.focus();
-          setQeury("");
-        }
-      }
+  // useEffect(
+  //   function () {
+  //     function callback(e) {
+  //       if (document.activeElement === inputEL.current) return;
 
-      document.addEventListener("keydown", callback);
+  //       if (e.code === "Enter") {
+  //         inputEL.current.focus();
+  //         setQeury("");
+  //       }
+  //     }
 
-      // Clean Up
-      return () => document.addEventListener("keydown", callback);
-    },
-    [setQeury]
-  );
+  //     document.addEventListener("keydown", callback);
 
-  // // Focus on input element
-  // useEffect(function () {
-  //   const el = document.querySelector(".search");
-  //   console.log(el);
-  //   el.focus();
-  // }, []);
+  //     // Clean Up
+  //     return () => document.addEventListener("keydown", callback);
+  //   },
+  //   [setQeury]
+  // );
 
   return (
     <input
@@ -391,22 +295,7 @@ function MovieDetails({ selectedId, onClose, onAddWatched, watched }) {
   );
 
   // Key Event
-  useEffect(
-    function () {
-      function callback(e) {
-        if (e.code === "Escape") {
-          onClose();
-        }
-      }
-      document.addEventListener("keydown", callback);
-
-      // Clean up
-      return function () {
-        document.addEventListener("keydown", callback);
-      };
-    },
-    [onClose]
-  );
+  useKey("Escape", onClose);
 
   // Change app title when on of movie selected
   useEffect(
